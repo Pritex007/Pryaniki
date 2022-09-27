@@ -13,6 +13,8 @@ protocol ViewModelProtocol {
     var error: ViewModelError? { get }
     var errorDataDidChange: ((ViewModelProtocol) -> ())? { get set }
     
+    var viewIndexesSequence: [Int] { get }
+    
     func fetchMainData()
 }
 
@@ -28,6 +30,8 @@ final class ViewModel: ViewModelProtocol {
             }
         }
     }
+    
+    var viewIndexesSequence: [Int] = []
     
     var errorDataDidChange: ((ViewModelProtocol) -> ())?
     var error: ViewModelError? {
@@ -68,6 +72,7 @@ final class ViewModel: ViewModelProtocol {
                         }
                         self?.fetchImage(stringURL: stringURL) { [weak self] imageData in
                             data.data[index].data.imageData = imageData
+                            self?.countNumberOfViews()
                             self?.mainData = data
                         }
                     }
@@ -80,6 +85,18 @@ final class ViewModel: ViewModelProtocol {
     }
     
     // MARK: - Private methods
+    
+    private func countNumberOfViews() {
+        viewIndexesSequence = []
+        mainData?.view.forEach { stringType in
+            mainData?.data.enumerated().forEach { index, viewInfo in
+            
+                if viewInfo.name == stringType {
+                    viewIndexesSequence.append(index)
+                }
+            }
+        }
+    }
     
     private func fetchImage(stringURL: String, completion: @escaping (Data) -> ()) {
         guard let url = URL(string: stringURL) else { return }

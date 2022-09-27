@@ -71,14 +71,15 @@ final class ViewController: UIViewController {
 
 extension ViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let numberOfRows = viewModel?.mainData?.view.count else { return 0 }
+        guard let numberOfRows = viewModel?.viewIndexesSequence.count else { return 0 }
         return numberOfRows
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let rawCellType = viewModel?.mainData?.view[indexPath.row],
-              let cellType = ViewType(rawValue: rawCellType),
-              let configureData = viewModel?.mainData?.data.first(where: { $0.name == rawCellType })
+        guard let configureDataIndex = viewModel?.viewIndexesSequence[indexPath.row],
+              let configureData = viewModel?.mainData?.data[configureDataIndex].data,
+              let rawCellType = viewModel?.mainData?.data[configureDataIndex].name,
+              let cellType = ViewType(rawValue: rawCellType)
         else {
             return UITableViewCell()
         }
@@ -89,21 +90,21 @@ extension ViewController: UITableViewDataSource {
             else {
                 return UITableViewCell()
             }
-            cell.configure(configureData: configureData.data)
+            cell.configure(configureData: configureData)
             return cell
         case .picture:
             guard let cell = tableView.dequeueReusableCell(withIdentifier: PictureCell.identifier) as? PictureCell
             else {
                 return UITableViewCell()
             }
-            cell.configure(configureData: configureData.data)
+            cell.configure(configureData: configureData)
             return cell
         case .selector:
             guard let cell = tableView.dequeueReusableCell(withIdentifier: SelectorCell.identifier) as? SelectorCell
             else {
                 return UITableViewCell()
             }
-            cell.configure(configureData: configureData.data)
+            cell.configure(configureData: configureData)
             cell.showAlert = { [weak self] message in
                 self?.showAlert(message: message)
             }
@@ -112,7 +113,8 @@ extension ViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let rawCellType = viewModel?.mainData?.view[indexPath.row],
+        guard let configureDataIndex = viewModel?.viewIndexesSequence[indexPath.row],
+              let rawCellType = viewModel?.mainData?.data[configureDataIndex].name,
               let cellType = ViewType(rawValue: rawCellType),
               cellType == .picture
         else {
@@ -126,13 +128,13 @@ extension ViewController: UITableViewDataSource {
 
 extension ViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let stringCellType = viewModel?.mainData?.view[indexPath.row],
-              stringCellType != ViewType.selector.rawValue
+        guard let configureDataIndex = viewModel?.viewIndexesSequence[indexPath.row],
+              let rawCellType = viewModel?.mainData?.data[configureDataIndex].name
         else {
             tableView.deselectRow(at: indexPath, animated: true)
             return
         }
-        showAlert(message: stringCellType)
+        showAlert(message: rawCellType)
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
