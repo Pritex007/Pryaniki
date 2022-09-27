@@ -8,10 +8,10 @@ enum ViewModelError {
 
 protocol ViewModelProtocol {
     var mainData: MainResponseData? { get }
-    var mainDataDidChange: ((ViewModelProtocol) -> ())? { get set }
+    var mainDataDidChange: (() -> ())? { get set }
     
     var error: ViewModelError? { get }
-    var errorDataDidChange: ((ViewModelProtocol) -> ())? { get set }
+    var errorDataDidChange: (() -> ())? { get set }
     
     var viewIndexesSequence: [Int] { get }
     
@@ -22,22 +22,22 @@ final class ViewModel: ViewModelProtocol {
 
     // MARK: - Intarnal properties
     
-    var mainDataDidChange: ((ViewModelProtocol) -> ())?
+    var mainDataDidChange: (() -> ())?
     var mainData: MainResponseData? {
         didSet {
             DispatchQueue.main.async {
-                self.mainDataDidChange?(self)
+                self.mainDataDidChange?()
             }
         }
     }
     
     var viewIndexesSequence: [Int] = []
     
-    var errorDataDidChange: ((ViewModelProtocol) -> ())?
+    var errorDataDidChange: (() -> ())?
     var error: ViewModelError? {
         didSet {
             DispatchQueue.main.async {
-                self.errorDataDidChange?(self)
+                self.errorDataDidChange?()
             }
         }
     }
@@ -72,7 +72,7 @@ final class ViewModel: ViewModelProtocol {
                         }
                         self?.fetchImage(stringURL: stringURL) { [weak self] imageData in
                             data.data[index].data.imageData = imageData
-                            self?.countNumberOfViews()
+                            self?.countNumberOfViews(data: data)
                             self?.mainData = data
                         }
                     }
@@ -86,7 +86,7 @@ final class ViewModel: ViewModelProtocol {
     
     // MARK: - Private methods
     
-    private func countNumberOfViews() {
+    private func countNumberOfViews(data: MainResponseData) {
         viewIndexesSequence = []
         mainData?.view.forEach { stringType in
             mainData?.data.enumerated().forEach { index, viewInfo in
